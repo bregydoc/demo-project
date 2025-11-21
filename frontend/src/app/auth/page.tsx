@@ -22,7 +22,13 @@ export default function AuthPage() {
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm<AuthFormData>();
+
+  const fillDemoCredentials = () => {
+    setValue("username", "demo");
+    setValue("password", "demo");
+  };
 
   const onSubmit = async (data: AuthFormData) => {
     try {
@@ -70,10 +76,29 @@ export default function AuthPage() {
           )}
 
           {isLogin && (
-            <div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-              <p className="text-sm text-slate-700">
-                <span className="font-semibold">ℹ️ No account yet?</span> Click
-                &quot;Sign up&quot; below to create one first!
+            <div className="mb-6 bg-teal-50 border-l-4 border-teal p-4 rounded">
+              <p className="text-sm text-slate-700 mb-3">
+                <span className="font-semibold">🧪 Try the demo account:</span>
+              </p>
+              <div className="bg-white rounded p-3 border border-teal/20 mb-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-mono text-slate-600">Username:</span>
+                  <span className="text-xs font-mono font-semibold text-teal">demo</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-slate-600">Password:</span>
+                  <span className="text-xs font-mono font-semibold text-teal">demo</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="w-full bg-teal/10 hover:bg-teal/20 text-teal font-medium py-2 px-4 rounded-lg transition-colors text-sm border border-teal/30"
+              >
+                Fill Demo Credentials
+              </button>
+              <p className="text-xs text-slate-500 mt-3 text-center">
+                Or click &quot;Sign up&quot; below to create your own account
               </p>
             </div>
           )}
