@@ -113,7 +113,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # REST Framework Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "notes.authentication.CsrfExemptSessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -146,12 +146,18 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Session cookie settings for cross-origin requests
-SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = None  # Allow cross-origin
 SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False  # False for local development (no HTTPS)
+CSRF_COOKIE_SAMESITE = None  # Allow cross-origin
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = False  # False for local development
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://0.0.0.0:3000",
 ]
+
+# For development: Allow cross-domain session/CSRF
+SESSION_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = None
