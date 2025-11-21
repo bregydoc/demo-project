@@ -53,9 +53,30 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold text-center mb-2 text-slate-800">
             Aesthetic Notes
           </h1>
-          <p className="text-center text-slate-600 mb-8">
+          <p className="text-center text-slate-600 mb-4">
             {isLogin ? "Welcome back!" : "Create your account"}
           </p>
+
+          {!isLogin && (
+            <div className="mb-6 bg-cream border-l-4 border-teal p-4 rounded">
+              <p className="text-sm text-slate-700">
+                <span className="font-semibold">💡 First time?</span> Create an
+                account with any credentials. Example:{" "}
+                <code className="bg-slate-100 px-2 py-0.5 rounded text-xs">
+                  demo / demo1234
+                </code>
+              </p>
+            </div>
+          )}
+
+          {isLogin && (
+            <div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+              <p className="text-sm text-slate-700">
+                <span className="font-semibold">ℹ️ No account yet?</span> Click
+                &quot;Sign up&quot; below to create one first!
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
@@ -140,4 +161,3 @@ export default function AuthPage() {
     </div>
   );
 }
-

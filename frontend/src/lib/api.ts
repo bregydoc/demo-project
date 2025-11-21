@@ -14,6 +14,24 @@ export const apiClient = axios.create({
   },
 });
 
+// Function to get CSRF token from cookies
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+  return null;
+}
+
+// Add CSRF token to all requests
+apiClient.interceptors.request.use((config) => {
+  const csrfToken = getCookie("csrftoken");
+  if (csrfToken) {
+    config.headers["X-CSRFToken"] = csrfToken;
+  }
+  return config;
+});
+
 // Types for API responses
 export interface User {
   id: number;

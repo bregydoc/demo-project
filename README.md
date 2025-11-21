@@ -2,6 +2,9 @@
 
 A beautiful, decoupled note-taking application with category organization and aesthetic pastel colors. Built with Django REST Framework (backend) and Next.js 14 (frontend).
 
+> **🚀 Quick Start:** `make dev` → Visit http://localhost:3000 → Sign up (e.g., `demo` / `demo1234`) → Create notes!  
+> **📖 See [DEMO.md](./DEMO.md) for a 30-second quick start guide.**
+
 ## Architecture
 
 This is a **monorepo** with a decoupled architecture:
@@ -38,6 +41,21 @@ aesthetic-notes-app/
 - Makefile for common tasks
 
 ## Quick Start
+
+### 🎯 Demo Credentials
+
+**IMPORTANT:** The app starts with NO users. You must **Sign Up** (register) first!
+
+**To get started:**
+1. Visit http://localhost:3000
+2. Click **"Sign up"** (not Sign In!)
+3. Create an account with any credentials, for example:
+   - Username: `demo`
+   - Password: `demo1234`
+   - Email: (optional, can leave blank)
+4. You'll be automatically logged in and can start creating notes!
+
+**After you've registered**, you can log back in with those same credentials.
 
 ### Prerequisites
 
@@ -81,6 +99,14 @@ This will:
 - Start backend on `http://localhost:8000`
 - Start frontend on `http://localhost:3000`
 
+4. **Create your first account:**
+
+Visit `http://localhost:3000` and click "Sign up" to register. Example credentials:
+- Username: `demo`
+- Password: `demo1234`
+
+Then start creating beautiful aesthetic notes! ✨
+
 ### Option 2: Docker Setup (Production-like)
 
 1. **Start services:**
@@ -100,6 +126,12 @@ make seed
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8000/api`
 - Django Admin: `http://localhost:8000/admin`
+
+4. **Register and start using:**
+
+Go to `http://localhost:3000`, click "Sign up", and create your account. Example:
+- Username: `demo`
+- Password: `demo1234`
 
 ## Available Commands
 

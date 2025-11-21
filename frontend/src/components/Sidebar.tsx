@@ -12,7 +12,7 @@ export default function Sidebar({
   selectedCategoryId,
   onCategorySelect,
 }: SidebarProps) {
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isLoading, error } = useCategories();
   const logoutMutation = useLogout();
   const router = useRouter();
 
@@ -46,8 +46,12 @@ export default function Sidebar({
 
           {isLoading ? (
             <div className="text-sm text-slate-500 px-4 py-2">Loading...</div>
-          ) : (
-            categories?.map((category) => (
+          ) : error ? (
+            <div className="text-sm text-red-500 px-4 py-2">
+              Failed to load categories
+            </div>
+          ) : categories && Array.isArray(categories) && categories.length > 0 ? (
+            categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => onCategorySelect(category.id)}
@@ -69,6 +73,10 @@ export default function Sidebar({
                 </span>
               </button>
             ))
+          ) : (
+            <div className="text-sm text-slate-500 px-4 py-2">
+              No categories found
+            </div>
           )}
         </div>
       </div>
