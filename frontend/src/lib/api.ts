@@ -99,8 +99,8 @@ export const authApi = {
 // Categories API
 export const categoriesApi = {
   list: async () => {
-    const { data } = await apiClient.get<Category[]>("/categories/");
-    return data;
+    const { data } = await apiClient.get<PaginatedResponse<Category>>("/categories/");
+    return data.results;
   },
 
   get: async (id: number) => {

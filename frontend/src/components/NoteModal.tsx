@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { Note } from "@/lib/api";
 import { useCategories, useCreateNote, useUpdateNote, useDeleteNote } from "@/lib/hooks";
-import { debounce } from "@/lib/utils";
 
 interface NoteModalProps {
   note: Note | null;
@@ -35,7 +34,7 @@ export default function NoteModal({ note, isOpen, onClose }: NoteModalProps) {
 
   // Track the current note ID to switch from create -> update mode
   const [currentNoteId, setCurrentNoteId] = useState<number | null>(note?.id || null);
-  // Use a ref to track the latest ID for the debounced function
+  // Use a ref to track the latest ID for save operations
   const currentNoteIdRef = useRef(currentNoteId);
 
   // Update ref when state changes
@@ -98,20 +97,10 @@ export default function NoteModal({ note, isOpen, onClose }: NoteModalProps) {
     [createMutation, updateMutation, note]
   );
 
-  // Auto-save on blur with debouncing
-  const debouncedSave = useMemo(() => debounce((data: NoteFormData) => {
-    void performSave(data);
-  }, 500), [performSave]);
-
   // Clear state when closing
   const handleClose = () => {
     setCurrentNoteId(null);
     onClose();
-  };
-
-  const handleFieldBlur = () => {
-    const data = watch();
-    debouncedSave(data);
   };
 
   const handleDelete = async () => {
@@ -156,7 +145,6 @@ export default function NoteModal({ note, isOpen, onClose }: NoteModalProps) {
             ) : categories && Array.isArray(categories) && categories.length > 0 ? (
               <select
                 {...register("category")}
-                onBlur={handleFieldBlur}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-transparent"
               >
                 {categories.map((category) => (
@@ -179,7 +167,6 @@ export default function NoteModal({ note, isOpen, onClose }: NoteModalProps) {
             <input
               type="text"
               {...register("title")}
-              onBlur={handleFieldBlur}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-transparent"
               placeholder="Enter note title..."
             />
@@ -191,7 +178,6 @@ export default function NoteModal({ note, isOpen, onClose }: NoteModalProps) {
             </label>
             <textarea
               {...register("content")}
-              onBlur={handleFieldBlur}
               rows={12}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-transparent resize-none"
               placeholder="Start writing..."
