@@ -2,6 +2,7 @@
 Django settings for aesthetic notes backend.
 Uses environment variables with sensible defaults for local development.
 """
+
 import os
 from pathlib import Path
 
@@ -144,3 +145,13 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
+# Session cookie settings for cross-origin requests
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://0.0.0.0:3000",
+]

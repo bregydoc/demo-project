@@ -5,6 +5,7 @@ Implements filtering, permissions, and query optimization.
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Prefetch
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -58,6 +59,7 @@ class NoteViewSet(viewsets.ModelViewSet):
 # Authentication endpoints (simple session-based auth)
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@ensure_csrf_cookie
 def register_view(request):
     """
     Register a new user.
@@ -94,6 +96,7 @@ def register_view(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@ensure_csrf_cookie
 def login_view(request):
     """
     Login user with session authentication.
