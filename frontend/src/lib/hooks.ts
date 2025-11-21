@@ -74,7 +74,9 @@ export function useCreateNote() {
   return useMutation({
     mutationFn: notesApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "notes",
+      });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
@@ -86,7 +88,9 @@ export function useUpdateNote() {
     mutationFn: ({ id, data }: { id: number; data: Parameters<typeof notesApi.update>[1] }) =>
       notesApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "notes",
+      });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });
@@ -97,7 +101,9 @@ export function useDeleteNote() {
   return useMutation({
     mutationFn: notesApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === "notes",
+      });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
   });

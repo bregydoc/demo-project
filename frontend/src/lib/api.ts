@@ -60,6 +60,13 @@ export interface Note {
   updated_at: string;
 }
 
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Auth API
 export const authApi = {
   register: async (username: string, password: string, email?: string) => {
@@ -106,8 +113,8 @@ export const categoriesApi = {
 export const notesApi = {
   list: async (categoryId?: number) => {
     const params = categoryId ? { category_id: categoryId } : {};
-    const { data } = await apiClient.get<Note[]>("/notes/", { params });
-    return data;
+    const { data } = await apiClient.get<PaginatedResponse<Note>>("/notes/", { params });
+    return data.results;
   },
 
   get: async (id: number) => {
