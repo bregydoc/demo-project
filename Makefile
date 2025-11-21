@@ -26,6 +26,21 @@ dev: ## Run both backend and frontend locally (without Docker)
 	(cd backend && cp .env.example .env 2>/dev/null || true && uv run python manage.py makemigrations && uv run python manage.py migrate && uv run python manage.py seed_categories && uv run python manage.py runserver) & \
 	(cd frontend && npm run dev)
 
+dev-backend: ## Run only backend locally (useful for debugging logs)
+	@echo "Starting backend server..."
+	cd backend && uv run python manage.py makemigrations && uv run python manage.py migrate && uv run python manage.py seed_categories && uv run python manage.py runserver
+
+dev-frontend: ## Run only frontend locally
+	@echo "Starting frontend server..."
+	cd frontend && npm run dev
+
+reset-db: ## Delete SQLite database and re-run migrations
+	@echo "Resetting database..."
+	rm -f backend/db.sqlite3
+	cd backend && uv run python manage.py migrate
+	cd backend && uv run python manage.py seed_categories
+	@echo "✓ Database reset complete! (All data deleted)"
+
 up: ## Start services with Docker Compose
 	@echo "Building and starting Docker containers..."
 	docker-compose up --build
