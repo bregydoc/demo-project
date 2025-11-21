@@ -1,6 +1,6 @@
 # Frontend - Aesthetic Notes
 
-Next.js 14 frontend for the Aesthetic Notes app.
+Next.js 16 frontend for the Aesthetic Notes app with island architecture for optimal streaming UX.
 
 ## Setup
 
@@ -31,10 +31,28 @@ npm run lint
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 16 (App Router with Partial Prerendering)
+- React 19
 - TypeScript (strict)
 - Tailwind CSS
 - TanStack Query
 - Axios
 - React Hook Form
+
+## Architecture
+
+This app uses **Island Architecture** for optimal streaming UX:
+
+- **Island Components**: Client components are dynamically imported with `ssr: false` to create isolated "islands" that hydrate independently
+- **Suspense Boundaries**: Used throughout for progressive streaming of UI components
+- **Loading States**: Custom loading skeletons for better perceived performance
+- **Server Components**: Static parts rendered on the server, dynamic islands hydrate on the client
+
+### Island Components
+
+- `SidebarIsland`: Category navigation and logout
+- `NotesGridIsland`: Notes list with filtering
+- `NoteModalIsland`: Note editing modal
+
+These islands stream independently, allowing the UI to appear faster and more responsive.
 

@@ -1,7 +1,4 @@
-import { Suspense } from "react";
-import DashboardContent from "./dashboard-content";
-
-function DashboardSkeleton() {
+export default function DashboardLoading() {
   return (
     <div className="flex h-screen bg-cream">
       <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col h-screen">
@@ -16,7 +13,6 @@ function DashboardSkeleton() {
             ))}
           </div>
         </div>
-        <div className="h-10 w-full bg-slate-200 rounded-lg animate-pulse" />
       </aside>
       <main className="flex-1 overflow-y-auto">
         <div className="p-8">
@@ -38,10 +34,3 @@ function DashboardSkeleton() {
   );
 }
 
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardContent />
-    </Suspense>
-  );
-}
