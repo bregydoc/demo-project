@@ -1,14 +1,11 @@
 # Backend Dockerfile optimized for uv package manager
-FROM python:3.11-slim
+FROM python:3.14-slim
 
-# Install system dependencies and uv
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+# Copy uv binary from official uv Docker image (handles multi-arch automatically)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Add uv to PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
+# Verify uv is installed and accessible
+RUN uv --version
 
 # Set working directory
 WORKDIR /app
@@ -30,5 +27,6 @@ RUN mkdir -p /app/data
 EXPOSE 8000
 
 # Run migrations and start server
+# PATH is set via ENV, so uv should be available
 CMD ["/bin/sh", "-c", "uv run python manage.py migrate && uv run python manage.py seed_categories && uv run python manage.py runserver 0.0.0.0:8000"]
 
