@@ -4,7 +4,25 @@
  */
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+// Get API URL from environment variable
+// In production, this MUST be set via NEXT_PUBLIC_API_URL
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8000/api"
+    : "");
+
+// Warn if API_URL is not set in production
+if (
+  typeof window !== "undefined" &&
+  !API_URL &&
+  window.location.hostname !== "localhost"
+) {
+  console.error(
+    "⚠️ NEXT_PUBLIC_API_URL is not set! API requests will fail. " +
+      "Please set NEXT_PUBLIC_API_URL environment variable to your backend URL."
+  );
+}
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -99,7 +117,9 @@ export const authApi = {
 // Categories API
 export const categoriesApi = {
   list: async () => {
-    const { data } = await apiClient.get<PaginatedResponse<Category>>("/categories/");
+    const { data } = await apiClient.get<PaginatedResponse<Category>>(
+      "/categories/"
+    );
     return data.results;
   },
 
@@ -113,7 +133,9 @@ export const categoriesApi = {
 export const notesApi = {
   list: async (categoryId?: number) => {
     const params = categoryId ? { category_id: categoryId } : {};
-    const { data } = await apiClient.get<PaginatedResponse<Note>>("/notes/", { params });
+    const { data } = await apiClient.get<PaginatedResponse<Note>>("/notes/", {
+      params,
+    });
     return data.results;
   },
 
@@ -122,12 +144,19 @@ export const notesApi = {
     return data;
   },
 
-  create: async (noteData: { title: string; content: string; category: number }) => {
+  create: async (noteData: {
+    title: string;
+    content: string;
+    category: number;
+  }) => {
     const { data } = await apiClient.post<Note>("/notes/", noteData);
     return data;
   },
 
-  update: async (id: number, noteData: Partial<{ title: string; content: string; category: number }>) => {
+  update: async (
+    id: number,
+    noteData: Partial<{ title: string; content: string; category: number }>
+  ) => {
     const { data } = await apiClient.patch<Note>(`/notes/${id}/`, noteData);
     return data;
   },
@@ -136,4 +165,3 @@ export const notesApi = {
     await apiClient.delete(`/notes/${id}/`);
   },
 };
-
