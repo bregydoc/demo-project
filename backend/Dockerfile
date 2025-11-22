@@ -27,8 +27,8 @@ COPY . .
 # Make entrypoint script executable
 RUN chmod +x entrypoint.sh
 
-# Create directory for SQLite database
-RUN mkdir -p /app/data
+# Create directory for SQLite database (persistent storage for Railway)
+RUN mkdir -p /app/data && chmod 777 /app/data
 
 # Expose port
 EXPOSE 8000

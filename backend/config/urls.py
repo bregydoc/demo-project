@@ -1,6 +1,7 @@
 """
 URL configuration for aesthetic notes backend.
 """
+
 from django.contrib import admin
 from django.urls import include, path
 
@@ -16,4 +17,3 @@ urlpatterns = [
     path("auth/logout/", views.logout_view, name="logout-root"),
     path("auth/me/", views.me_view, name="me-root"),
 ]
-
