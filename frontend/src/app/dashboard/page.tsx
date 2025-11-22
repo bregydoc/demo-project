@@ -27,11 +27,11 @@ function DashboardSkeleton() {
             </div>
             <div className="h-12 w-32 bg-slate-200 rounded animate-pulse" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-white rounded-lg border-2 border-slate-200 p-4 h-48 animate-pulse" />
-            ))}
-          </div>
+              ))}
+            </div>
         </div>
       </main>
     </div>

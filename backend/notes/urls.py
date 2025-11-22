@@ -13,7 +13,6 @@ router.register(r"notes", views.NoteViewSet, basename="note")
 
 urlpatterns = [
     # Auth endpoints
-    path("auth/csrf/", views.csrf_token_view, name="csrf-token"),
     path("auth/register/", views.register_view, name="register"),
     path("auth/login/", views.login_view, name="login"),
     path("auth/logout/", views.logout_view, name="logout"),

@@ -132,17 +132,6 @@ def logout_view(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
-@ensure_csrf_cookie
-def csrf_token_view(request):
-    """Get CSRF token for frontend. Sets CSRF cookie and returns token."""
-    from django.middleware.csrf import get_token
-
-    token = get_token(request)
-    return Response({"csrfToken": token})
-
-
-@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me_view(request):
     """Return current user info."""
