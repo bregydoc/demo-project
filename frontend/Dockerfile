@@ -1,5 +1,5 @@
 # Multi-stage build for Next.js frontend
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies stage
 FROM base AS deps
@@ -32,9 +32,10 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files
-COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy public directory (created during build if needed)
+COPY --from=builder /app/public ./public
 
 USER nextjs
 
