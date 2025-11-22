@@ -93,12 +93,11 @@ async function ensureCsrfToken(): Promise<string | null> {
     return existingToken;
   }
 
-  // Fetch CSRF token
+  // Fetch CSRF token using apiClient to ensure correct baseURL
   csrfTokenPromise = (async () => {
     try {
-      const response = await axios.get(`${API_URL || ""}/auth/csrf/`, {
-        withCredentials: true,
-      });
+      // Use apiClient to ensure we use the correct baseURL (with /api prefix)
+      const response = await apiClient.get("/auth/csrf/");
       // CSRF cookie is set automatically by Django
       return response.data.csrfToken || null;
     } catch (error) {
