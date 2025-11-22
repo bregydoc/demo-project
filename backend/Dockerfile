@@ -13,11 +13,10 @@ WORKDIR /app
 # Copy dependency files first for layer caching
 COPY pyproject.toml uv.lock* ./
 
-# Install dependencies using uv sync (creates .venv)
-RUN uv venv && uv sync --frozen || uv sync
-
-# Set PATH to include venv for Railway compatibility (backup for health checks, etc.)
-ENV PATH="/app/.venv/bin:$PATH"
+# Install dependencies system-wide using uv pip install for Railway compatibility
+# Railway runs commands using system Python, so we need Django available globally
+# First try to install from lock file, fallback to direct install from pyproject.toml
+RUN uv pip install --system --no-cache django>=5.0,<6.0 djangorestframework>=3.14.0 django-cors-headers>=4.3.0 python-dotenv>=1.0.0
 
 # Copy application code
 COPY . .
@@ -29,7 +28,6 @@ RUN mkdir -p /app/data
 EXPOSE 8000
 
 # Run migrations and start server
-# Use venv python directly to ensure Django is available
-# Railway may run commands outside of PATH, so use absolute path
-CMD ["/bin/sh", "-c", "/app/.venv/bin/python manage.py migrate && /app/.venv/bin/python manage.py seed_categories && /app/.venv/bin/python manage.py runserver 0.0.0.0:8000"]
+# Using system python since dependencies are installed globally
+CMD ["/bin/sh", "-c", "python manage.py migrate && python manage.py seed_categories && python manage.py runserver 0.0.0.0:8000"]
 
