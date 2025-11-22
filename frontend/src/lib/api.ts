@@ -5,12 +5,22 @@
 import axios from "axios";
 
 // Get API URL from environment variable
-// In production, this MUST be set via NEXT_PUBLIC_API_URL
+// NOTE: NEXT_PUBLIC_* variables are embedded at BUILD TIME, not runtime
+// If you set this variable after building, you MUST rebuild the app
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:8000/api"
     : "");
+
+// Log the API URL being used (for debugging)
+if (typeof window !== "undefined") {
+  console.log("🔗 API Base URL:", API_URL || "(empty - using relative URLs)");
+  console.log(
+    "🔗 NEXT_PUBLIC_API_URL:",
+    process.env.NEXT_PUBLIC_API_URL || "(not set)"
+  );
+}
 
 // Warn if API_URL is not set in production
 if (
@@ -19,18 +29,45 @@ if (
   window.location.hostname !== "localhost"
 ) {
   console.error(
-    "⚠️ NEXT_PUBLIC_API_URL is not set! API requests will fail. " +
-      "Please set NEXT_PUBLIC_API_URL environment variable to your backend URL."
+    "❌ NEXT_PUBLIC_API_URL is not set! API requests will fail.",
+    "\n📝 Please:",
+    "\n   1. Set NEXT_PUBLIC_API_URL in Railway to your backend URL",
+    "\n   2. Trigger a rebuild/redeploy of the frontend service",
+    "\n   3. Example: https://your-backend.railway.app/api"
   );
 }
 
+// Add request interceptor to validate API URL before making requests
+const validateApiUrl = (config: any) => {
+  if (
+    !config.baseURL &&
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost"
+  ) {
+    const errorMsg =
+      "❌ API URL not configured! NEXT_PUBLIC_API_URL must be set and app must be rebuilt.\n" +
+      "Current request will fail: " +
+      config.url;
+    console.error(errorMsg);
+    throw new Error(
+      "API URL not configured. Please set NEXT_PUBLIC_API_URL and rebuild."
+    );
+  }
+  return config;
+};
+
 export const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL || undefined, // Use undefined instead of empty string
   withCredentials: true, // Include cookies for session auth
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// Add validation interceptor
+apiClient.interceptors.request.use(validateApiUrl, (error) =>
+  Promise.reject(error)
+);
 
 // Function to get CSRF token from cookies
 function getCookie(name: string): string | null {
