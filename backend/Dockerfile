@@ -11,12 +11,12 @@ RUN uv --version
 WORKDIR /app
 
 # Copy dependency files first for layer caching
-COPY pyproject.toml uv.lock* ./
+COPY pyproject.toml uv.lock* requirements.txt ./
 
 # Install dependencies system-wide using pip for Railway compatibility
 # Railway runs commands using system Python, so we need Django available globally
-# Use pip directly (not uv pip) to ensure system-wide installation
-RUN pip install --no-cache-dir django>=5.0,<6.0 djangorestframework>=3.14.0 django-cors-headers>=4.3.0 python-dotenv>=1.0.0
+# Use requirements.txt for reliable installation
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Verify Django is installed and accessible
 RUN python -c "import django; print(f'Django {django.__version__} installed successfully')"
