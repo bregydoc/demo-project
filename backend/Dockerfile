@@ -11,11 +11,15 @@ RUN uv --version
 WORKDIR /app
 
 # Copy dependency files first for layer caching
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock* ./
 
 # Install dependencies using uv
 # --frozen ensures deterministic installs from lock file
+# Create venv and sync dependencies
 RUN uv venv && uv sync --frozen || uv sync
+
+# Activate virtual environment in PATH for Railway compatibility
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY . .
@@ -27,6 +31,6 @@ RUN mkdir -p /app/data
 EXPOSE 8000
 
 # Run migrations and start server
-# PATH is set via ENV, so uv should be available
-CMD ["/bin/sh", "-c", "uv run python manage.py migrate && uv run python manage.py seed_categories && uv run python manage.py runserver 0.0.0.0:8000"]
+# Using direct python commands since PATH includes venv/bin
+CMD ["/bin/sh", "-c", "python manage.py migrate && python manage.py seed_categories && python manage.py runserver 0.0.0.0:8000"]
 
