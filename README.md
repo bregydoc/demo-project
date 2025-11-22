@@ -21,7 +21,7 @@ aesthetic-notes-app/
 ### Tech Stack
 
 **Backend:**
-- Python 3.11+
+- Python 3.14+
 - Django 5
 - Django REST Framework (DRF)
 - Package management: `uv`
@@ -59,7 +59,7 @@ aesthetic-notes-app/
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.14+
 - Node.js 18+
 - Docker & Docker Compose (for containerized setup)
 - `uv` (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
