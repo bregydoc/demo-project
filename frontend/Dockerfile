@@ -17,12 +17,14 @@ WORKDIR /app
 
 # Accept build argument for API URL
 # Railway automatically passes environment variables as build args
-ARG NEXT_PUBLIC_API_URL
+# Default to empty string if not set (will use relative URLs)
+ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Verify the variable is set during build (for debugging)
 RUN if [ -z "$NEXT_PUBLIC_API_URL" ]; then \
       echo "⚠️ WARNING: NEXT_PUBLIC_API_URL is not set during build!"; \
+      echo "⚠️ Frontend will use relative URLs - ensure NEXT_PUBLIC_API_URL is set in Railway"; \
     else \
       echo "✓ NEXT_PUBLIC_API_URL is set: $NEXT_PUBLIC_API_URL"; \
     fi
