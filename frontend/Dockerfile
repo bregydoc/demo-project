@@ -15,10 +15,22 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
+# Accept build argument for API URL
+# Railway automatically passes environment variables as build args
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Verify the variable is set during build (for debugging)
+RUN if [ -z "$NEXT_PUBLIC_API_URL" ]; then \
+      echo "⚠️ WARNING: NEXT_PUBLIC_API_URL is not set during build!"; \
+    else \
+      echo "✓ NEXT_PUBLIC_API_URL is set: $NEXT_PUBLIC_API_URL"; \
+    fi
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build Next.js app
+# Build Next.js app (NEXT_PUBLIC_* vars are embedded at build time)
 RUN npm run build
 
 # Production stage
