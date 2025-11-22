@@ -24,13 +24,15 @@ RUN python -c "import django; print(f'Django {django.__version__} installed succ
 # Copy application code
 COPY . .
 
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Create directory for SQLite database
 RUN mkdir -p /app/data
 
 # Expose port
 EXPOSE 8000
 
-# Run migrations and start server
-# Using system python since dependencies are installed globally
-CMD ["/bin/sh", "-c", "python manage.py migrate && python manage.py seed_categories && python manage.py runserver 0.0.0.0:8000"]
+# Use entrypoint script to ensure Django is available
+ENTRYPOINT ["/app/entrypoint.sh"]
 
