@@ -25,7 +25,22 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# ALLOWED_HOSTS Configuration
+# Parse from environment variable, stripping whitespace
+default_allowed_hosts = ["localhost", "127.0.0.1"]
+allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+if allowed_hosts_env:
+    # Merge env var hosts with defaults, stripping whitespace
+    default_allowed_hosts.extend(
+        [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
+    )
+
+# Automatically add Railway public domain if available (for production deployments)
+railway_public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
+if railway_public_domain and railway_public_domain not in default_allowed_hosts:
+    default_allowed_hosts.append(railway_public_domain)
+
+ALLOWED_HOSTS = default_allowed_hosts
 
 # Application definition
 INSTALLED_APPS = [

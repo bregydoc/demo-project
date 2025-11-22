@@ -78,8 +78,48 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+// Fetch CSRF token before making authenticated requests
+let csrfTokenPromise: Promise<string | null> | null = null;
+
+async function ensureCsrfToken(): Promise<string | null> {
+  // If we already have a pending request, wait for it
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
+  }
+
+  // Check if we already have the token in cookies
+  const existingToken = getCookie("csrftoken");
+  if (existingToken) {
+    return existingToken;
+  }
+
+  // Fetch CSRF token
+  csrfTokenPromise = (async () => {
+    try {
+      const response = await axios.get(`${API_URL || ""}/auth/csrf/`, {
+        withCredentials: true,
+      });
+      // CSRF cookie is set automatically by Django
+      return response.data.csrfToken || null;
+    } catch (error) {
+      console.warn("Failed to fetch CSRF token:", error);
+      // Reset promise so we can try again later
+      csrfTokenPromise = null;
+      return null;
+    }
+  })();
+
+  return csrfTokenPromise;
+}
+
 // Add CSRF token to all requests
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
+  // For POST/PUT/PATCH/DELETE requests, ensure we have CSRF token
+  const method = config.method?.toUpperCase();
+  if (method && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    await ensureCsrfToken();
+  }
+
   const csrfToken = getCookie("csrftoken");
   if (csrfToken) {
     config.headers["X-CSRFToken"] = csrfToken;
