@@ -124,11 +124,17 @@ REST_FRAMEWORK = {
 }
 
 # CORS Configuration
-# Allow frontend to make requests from localhost:3000
-CORS_ALLOWED_ORIGINS = [
+# Allow frontend to make requests from configured origins
+# Can be set via CORS_ALLOWED_ORIGINS env var (comma-separated)
+default_cors_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+cors_origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if cors_origins_env:
+    # Merge env var origins with defaults
+    default_cors_origins.extend([origin.strip() for origin in cors_origins_env.split(",")])
+CORS_ALLOWED_ORIGINS = default_cors_origins
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -146,17 +152,26 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Session cookie settings for cross-origin requests
+# Detect if we're in production (HTTPS) - check if any CORS origin uses HTTPS
+is_production = any(origin.startswith("https://") for origin in CORS_ALLOWED_ORIGINS)
+
 SESSION_COOKIE_SAMESITE = None  # Allow cross-origin
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = False  # False for local development (no HTTPS)
+SESSION_COOKIE_SECURE = is_production  # True for HTTPS (production), False for HTTP (dev)
 CSRF_COOKIE_SAMESITE = None  # Allow cross-origin
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SECURE = False  # False for local development
-CSRF_TRUSTED_ORIGINS = [
+CSRF_COOKIE_SECURE = is_production  # True for HTTPS (production), False for HTTP (dev)
+# CSRF trusted origins (same as CORS origins)
+default_csrf_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://0.0.0.0:3000",
 ]
+csrf_origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if csrf_origins_env:
+    # Merge env var origins with defaults
+    default_csrf_origins.extend([origin.strip() for origin in csrf_origins_env.split(",")])
+CSRF_TRUSTED_ORIGINS = default_csrf_origins
 
 # For development: Allow cross-domain session/CSRF
 SESSION_COOKIE_DOMAIN = None
