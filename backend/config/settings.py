@@ -89,10 +89,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
+# Use /app/data for Railway persistent volume, fallback to BASE_DIR for local dev
+database_path = os.getenv("DATABASE_PATH", str(BASE_DIR / "db.sqlite3"))
+if database_path.startswith("/app/data"):
+    # Ensure directory exists for Railway volume mount
+    Path("/app/data").mkdir(parents=True, exist_ok=True)
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": database_path,
     }
 }
 

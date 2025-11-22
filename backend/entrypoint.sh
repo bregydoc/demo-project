@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Set database path for Railway volume
+export DATABASE_PATH=/app/data/db.sqlite3
+
+# Ensure data directory exists (for Railway volume mount)
+mkdir -p /app/data
+
 # Verify Django is installed
 python -c "import django; print('✓ Django', django.__version__, 'is available')" || {
     echo "✗ ERROR: Django is not available!"
