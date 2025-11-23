@@ -2,6 +2,7 @@
 API ViewSets using DRF ModelViewSet pattern.
 Implements filtering, permissions, and query optimization.
 """
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Prefetch
@@ -102,13 +103,38 @@ def login_view(request):
     Login user with session authentication.
     Expects: username, password
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     username = request.data.get("username")
     password = request.data.get("password")
 
+    logger.info(f"Login attempt for username: {username}")
+    logger.info(f"Request data keys: {list(request.data.keys())}")
+    logger.info(f"Request method: {request.method}")
+    logger.info(f"Request path: {request.path}")
+
+    # Check if user exists
+    from django.contrib.auth.models import User
+
+    user_exists = User.objects.filter(username=username).exists()
+    logger.info(f"User '{username}' exists in database: {user_exists}")
+
+    if user_exists:
+        db_user = User.objects.get(username=username)
+        logger.info(
+            f"User found - ID: {db_user.id}, Active: {db_user.is_active}, Is Staff: {db_user.is_staff}"
+        )
+        logger.info(f"Password check result: {db_user.check_password(password)}")
+
     user = authenticate(request, username=username, password=password)
+    logger.info(f"Authenticate result: {user is not None}")
 
     if user is not None:
+        logger.info(f"Login successful for user: {user.username} (ID: {user.id})")
         login(request, user)
+        logger.info(f"Session created - Session key: {request.session.session_key}")
         return Response(
             {
                 "id": user.id,
@@ -117,6 +143,12 @@ def login_view(request):
             }
         )
     else:
+        logger.warning(f"Login failed for username: {username}")
+        # Additional debugging: check all users
+        all_users = User.objects.all()
+        logger.info(f"Total users in database: {all_users.count()}")
+        for u in all_users:
+            logger.info(f"  - User: {u.username}, Active: {u.is_active}")
         return Response(
             {"error": "Invalid credentials"},
             status=status.HTTP_401_UNAUTHORIZED,
@@ -142,4 +174,3 @@ def me_view(request):
             "email": request.user.email,
         }
     )
-
