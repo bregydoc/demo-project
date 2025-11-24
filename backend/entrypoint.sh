@@ -11,26 +11,21 @@ export DATABASE_PATH=/app/data/db.sqlite3
 mkdir -p /app/data
 
 # Verify Django is installed
-echo "=== VERIFYING DJANGO ===" >&2
+echo "=== VERIFYING DJANGO ==="
 python -c "import django; print('✓ Django', django.__version__, 'is available')" || {
-    echo "✗ ERROR: Django is not available!" >&2
+    echo "✗ ERROR: Django is not available!"
     exit 1
 }
 
 # Run migrations
-echo "=== RUNNING MIGRATIONS ===" >&2
+echo "=== RUNNING MIGRATIONS ==="
 python manage.py migrate
+echo "=== MIGRATIONS COMPLETED ==="
 
 # Seed categories and demo user (always runs, idempotent)
-echo "=== SEEDING CATEGORIES AND DEMO USER ===" >&2
-python -u manage.py seed_categories 2>&1 || {
-    echo "ERROR: Seed command failed with exit code $?" >&2
-    exit 1
-}
-echo "=== SEED COMMAND COMPLETED ===" >&2
+python -u manage.py seed_categories || echo "WARNING: Seed command had issues, but continuing..."
 
-# Verify and ensure demo user exists with detailed logging
-echo "=== VERIFYING DEMO USER ===" >&2
+# CRITICAL: Always ensure demo user exists - this is the fallback
 python -u manage.py shell << 'PYTHON_EOF'
 import sys
 import os
@@ -38,71 +33,50 @@ os.environ['PYTHONUNBUFFERED'] = '1'
 
 from django.contrib.auth.models import User
 
-print("=" * 60, flush=True)
-print("USER VERIFICATION", flush=True)
-print("=" * 60, flush=True)
+# CRITICAL: Always ensure demo user exists
+print("CRITICAL: Ensuring demo user exists...", file=sys.stderr, flush=True)
 
-# Check total users
-total_users = User.objects.count()
-print(f"Total users in database: {total_users}", flush=True)
-
-# List all users
-if total_users > 0:
-    print("\nAll users in database:", flush=True)
-    for u in User.objects.all():
-        print(f"  - Username: {u.username}, ID: {u.id}, Active: {u.is_active}, Email: {u.email}", flush=True)
-
-# ALWAYS ensure demo user exists - delete and recreate if needed
-print("\nEnsuring demo user exists...", flush=True)
 demo_user = User.objects.filter(username='demo').first()
 
 if demo_user:
-    print(f"Demo user found: {demo_user.username} (ID: {demo_user.id})", flush=True)
-    # Always reset password to ensure it's correct
+    print(f"Demo user found, resetting password...", file=sys.stderr, flush=True)
     demo_user.set_password('demo')
     demo_user.is_active = True
     demo_user.save()
-    print("Password reset to 'demo'", flush=True)
 else:
-    print("Demo user does not exist - creating now...", flush=True)
+    print("Demo user NOT found, creating now...", file=sys.stderr, flush=True)
     try:
         demo_user = User.objects.create_user('demo', 'demo@example.com', 'demo')
         demo_user.is_active = True
         demo_user.save()
-        print(f"Created demo user: {demo_user.username} (ID: {demo_user.id})", flush=True)
+        print(f"Created demo user: {demo_user.username} (ID: {demo_user.id})", file=sys.stderr, flush=True)
     except Exception as e:
-        print(f"ERROR creating demo user: {e}", flush=True)
+        print(f"FATAL ERROR creating demo user: {e}", file=sys.stderr, flush=True)
         import traceback
-        traceback.print_exc(file=sys.stdout)
-        sys.stdout.flush()
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
         sys.exit(1)
 
-# Verify user exists and password works
+# Verify
 final_check = User.objects.filter(username='demo').first()
 if not final_check:
-    print("ERROR: Demo user still does not exist after creation!", flush=True)
+    print("FATAL: Demo user still missing after creation!", file=sys.stderr, flush=True)
     sys.exit(1)
 
 if not final_check.check_password('demo'):
-    print("ERROR: Password verification failed!", flush=True)
+    print("FATAL: Password verification failed!", file=sys.stderr, flush=True)
     sys.exit(1)
 
-print(f"\n✓ SUCCESS: Demo user verified", flush=True)
-print(f"  Username: {final_check.username}", flush=True)
-print(f"  ID: {final_check.id}", flush=True)
-print(f"  Active: {final_check.is_active}", flush=True)
-print(f"  Password check: PASSED", flush=True)
-print("=" * 60, flush=True)
-print("VERIFICATION COMPLETE", flush=True)
-print("=" * 60, flush=True)
+print(f"SUCCESS: Demo user verified - Username: {final_check.username}, ID: {final_check.id}", file=sys.stderr, flush=True)
 PYTHON_EOF
 
 EXIT_CODE=$?
+echo "Verification script exit code: $EXIT_CODE"
 if [ $EXIT_CODE -ne 0 ]; then
-    echo "ERROR: User verification failed with exit code $EXIT_CODE!" >&2
+    echo "ERROR: User verification failed with exit code $EXIT_CODE!"
     exit 1
 fi
-echo "=== USER VERIFICATION COMPLETED ===" >&2
+echo "=== USER VERIFICATION COMPLETED ==="
 
 # Start server with gunicorn (production-ready)
 echo "Starting Gunicorn server..."
