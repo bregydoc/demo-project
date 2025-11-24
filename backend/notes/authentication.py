@@ -11,6 +11,25 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     Used for API endpoints where CSRF protection is handled differently.
     """
 
+    def authenticate(self, request):
+        # Detailed logging to debug 403 errors
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Authenticating request: {request.method} {request.path}")
+        logger.info(f"Headers: {dict(request.headers)}")
+        logger.info(f"Cookies: {request.COOKIES}")
+        
+        user_auth_tuple = super().authenticate(request)
+        
+        if user_auth_tuple is None:
+            logger.warning("Authentication failed: No user found in session")
+        else:
+            user, _ = user_auth_tuple
+            logger.info(f"Authentication successful for user: {user.username}")
+            
+        return user_auth_tuple
+
     def enforce_csrf(self, request):
         """
         Override to skip CSRF check for API endpoints.
