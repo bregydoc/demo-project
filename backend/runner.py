@@ -142,11 +142,14 @@ def main():
     log("=" * 60)
     # 4. Start Gunicorn
     log("Starting Gunicorn...")
+    # Use PORT environment variable (Railway sets this) or default to 8000
+    port = os.environ.get('PORT', '8000')
+    log(f"Binding to port: {port}")
     # Replace current process with Gunicorn
     os.execvp("gunicorn", [
         "gunicorn", 
         "config.wsgi:application", 
-        "--bind", "0.0.0.0:8000", 
+        "--bind", f"0.0.0.0:{port}", 
         "--workers", "2", 
         "--timeout", "120", 
         "--access-logfile", "-", 
