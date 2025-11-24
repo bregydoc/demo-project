@@ -16,6 +16,11 @@ class Command(BaseCommand):
         Create default categories with aesthetic colors and a demo user.
         Uses get_or_create to be idempotent.
         """
+        import sys
+        
+        self.stdout.write("Starting seed process...")
+        self.stdout.flush()
+        
         # Seed categories
         default_categories = [
             {
@@ -51,33 +56,73 @@ class Command(BaseCommand):
                 )
             else:
                 self.stdout.write(f"Category already exists: {category.name}")
+            self.stdout.flush()
 
         # Seed demo user
+        self.stdout.write("\nChecking for demo user...")
+        self.stdout.flush()
+        
+        # Check if user exists first
+        existing_user = User.objects.filter(username="demo").first()
+        if existing_user:
+            self.stdout.write(f"Demo user already exists: {existing_user.username}")
+            self.stdout.write(f"  ID: {existing_user.id}, Active: {existing_user.is_active}")
+            self.stdout.flush()
+        
         demo_user, user_created = User.objects.get_or_create(
             username="demo",
             defaults={
                 "email": "demo@example.com",
             },
         )
+        
         if user_created:
             demo_user.set_password("demo")
             demo_user.save()
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"\nCreated demo user: {demo_user.username} (password: demo)"
+                    f"\n✓ Created demo user: {demo_user.username} (password: demo)"
                 )
             )
+            self.stdout.write(f"  User ID: {demo_user.id}")
+            self.stdout.write(f"  Active: {demo_user.is_active}")
+            self.stdout.flush()
+            
+            # Verify password was set correctly
+            if demo_user.check_password("demo"):
+                self.stdout.write("  ✓ Password verification: SUCCESS")
+            else:
+                self.stdout.write(self.style.ERROR("  ✗ Password verification FAILED!"))
+                sys.exit(1)
         else:
             # Update password in case it was changed
             demo_user.set_password("demo")
             demo_user.save()
             self.stdout.write(
-                f"Demo user already exists: {demo_user.username} (password reset to: demo)"
+                f"\n✓ Demo user already exists: {demo_user.username} (password reset to: demo)"
             )
+            self.stdout.write(f"  User ID: {demo_user.id}")
+            self.stdout.flush()
+            
+            # Verify password
+            if demo_user.check_password("demo"):
+                self.stdout.write("  ✓ Password verification: SUCCESS")
+            else:
+                self.stdout.write(self.style.ERROR("  ✗ Password verification FAILED!"))
+                sys.exit(1)
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"\nSeeding complete. Created {categories_created} new categories."
+                f"\n✓ Seeding complete. Created {categories_created} new categories."
             )
         )
+        self.stdout.flush()
+        
+        # Final verification
+        final_user = User.objects.filter(username="demo").first()
+        if final_user and final_user.check_password("demo"):
+            self.stdout.write("✓ Final verification: Demo user exists and password is correct")
+        else:
+            self.stdout.write(self.style.ERROR("✗ Final verification FAILED!"))
+            sys.exit(1)
 
