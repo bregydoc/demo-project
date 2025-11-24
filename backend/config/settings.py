@@ -176,12 +176,20 @@ CORS_ALLOW_HEADERS = [
 # Detect if we're in production (HTTPS) - check if any CORS origin uses HTTPS
 is_production = any(origin.startswith("https://") for origin in CORS_ALLOWED_ORIGINS)
 
-SESSION_COOKIE_SAMESITE = None  # Allow cross-origin
+# CRITICAL: Use string 'None' for cross-site cookies
+SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = is_production  # True for HTTPS (production), False for HTTP (dev)
-CSRF_COOKIE_SAMESITE = None  # Allow cross-origin
+SESSION_COOKIE_SECURE = True  # Must be True if SameSite=None
+CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SECURE = is_production  # True for HTTPS (production), False for HTTP (dev)
+CSRF_COOKIE_SECURE = True  # Must be True if SameSite=None
+
+# Ensure we don't block cookies in dev if using HTTP
+if not is_production and DEBUG:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
 # CSRF trusted origins (same as CORS origins)
 default_csrf_origins = [
     "http://localhost:3000",
