@@ -2,6 +2,7 @@
 Management command to seed default categories and demo user.
 Creates the 3 aesthetic default categories and a demo user if they don't exist.
 """
+
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
@@ -17,10 +18,10 @@ class Command(BaseCommand):
         Uses get_or_create to be idempotent.
         """
         import sys
-        
+
         self.stdout.write("Starting seed process...")
         self.stdout.flush()
-        
+
         # Seed categories
         default_categories = [
             {
@@ -51,9 +52,7 @@ class Command(BaseCommand):
             )
             if created:
                 categories_created += 1
-                self.stdout.write(
-                    self.style.SUCCESS(f"Created category: {category.name}")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Created category: {category.name}"))
             else:
                 self.stdout.write(f"Category already exists: {category.name}")
             self.stdout.flush()
@@ -61,33 +60,31 @@ class Command(BaseCommand):
         # Seed demo user
         self.stdout.write("\nChecking for demo user...")
         self.stdout.flush()
-        
+
         # Check if user exists first
         existing_user = User.objects.filter(username="demo").first()
         if existing_user:
             self.stdout.write(f"Demo user already exists: {existing_user.username}")
             self.stdout.write(f"  ID: {existing_user.id}, Active: {existing_user.is_active}")
             self.stdout.flush()
-        
+
         demo_user, user_created = User.objects.get_or_create(
             username="demo",
             defaults={
                 "email": "demo@example.com",
             },
         )
-        
+
         if user_created:
             demo_user.set_password("demo")
             demo_user.save()
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"\n✓ Created demo user: {demo_user.username} (password: demo)"
-                )
+                self.style.SUCCESS(f"\n✓ Created demo user: {demo_user.username} (password: demo)")
             )
             self.stdout.write(f"  User ID: {demo_user.id}")
             self.stdout.write(f"  Active: {demo_user.is_active}")
             self.stdout.flush()
-            
+
             # Verify password was set correctly
             if demo_user.check_password("demo"):
                 self.stdout.write("  ✓ Password verification: SUCCESS")
@@ -103,7 +100,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(f"  User ID: {demo_user.id}")
             self.stdout.flush()
-            
+
             # Verify password
             if demo_user.check_password("demo"):
                 self.stdout.write("  ✓ Password verification: SUCCESS")
@@ -117,7 +114,7 @@ class Command(BaseCommand):
             )
         )
         self.stdout.flush()
-        
+
         # Final verification
         final_user = User.objects.filter(username="demo").first()
         if final_user and final_user.check_password("demo"):
@@ -125,4 +122,3 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR("✗ Final verification FAILED!"))
             sys.exit(1)
-
