@@ -1,45 +1,58 @@
 #!/bin/bash
-set -e
+# Don't use set -e here, we want to continue even if seed fails
+set +e
 
 # Force unbuffered output
 export PYTHONUNBUFFERED=1
 
-# Set database path for Railway volume
-export DATABASE_PATH=/app/data/db.sqlite3
+# Set database path for persistent storage
+# Works for both Railway (/app/data volume) and docker-compose (backend-data:/app/data)
+# Falls back to BASE_DIR/db.sqlite3 if DATABASE_PATH not set (local dev)
+export DATABASE_PATH=${DATABASE_PATH:-/app/data/db.sqlite3}
 
-# Ensure data directory exists (for Railway volume mount)
+# Ensure data directory exists (for volume mounts)
 mkdir -p /app/data
+chmod 777 /app/data 2>/dev/null || true
 
 # Verify Django is installed
-echo "=== VERIFYING DJANGO ==="
 python -c "import django; print('✓ Django', django.__version__, 'is available')" || {
     echo "✗ ERROR: Django is not available!"
     exit 1
 }
 
 # Run migrations
-echo "=== RUNNING MIGRATIONS ==="
 python manage.py migrate
-echo "=== MIGRATIONS COMPLETED ==="
 
 # Seed categories and demo user (always runs, idempotent)
-python -u manage.py seed_categories || echo "WARNING: Seed command had issues, but continuing..."
+python -u manage.py seed_categories
 
-# CRITICAL: Always ensure demo user exists - this is the fallback
-python -u manage.py shell << 'PYTHON_EOF'
+# CRITICAL: Always ensure demo user exists - this MUST run
+# Use a Python script file instead of heredoc for better reliability
+cat > /tmp/ensure_demo_user.py << 'PYTHON_SCRIPT'
 import sys
 import os
-os.environ['PYTHONUNBUFFERED'] = '1'
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()
 
 from django.contrib.auth.models import User
 
-# CRITICAL: Always ensure demo user exists
 print("CRITICAL: Ensuring demo user exists...", file=sys.stderr, flush=True)
+
+# Check database location
+from django.conf import settings
+db_path = settings.DATABASES['default']['NAME']
+print(f"Database path: {db_path}", file=sys.stderr, flush=True)
+
+# Check total users
+total = User.objects.count()
+print(f"Total users before: {total}", file=sys.stderr, flush=True)
 
 demo_user = User.objects.filter(username='demo').first()
 
 if demo_user:
-    print(f"Demo user found, resetting password...", file=sys.stderr, flush=True)
+    print(f"Demo user found (ID: {demo_user.id}), resetting password...", file=sys.stderr, flush=True)
     demo_user.set_password('demo')
     demo_user.is_active = True
     demo_user.save()
@@ -67,18 +80,19 @@ if not final_check.check_password('demo'):
     print("FATAL: Password verification failed!", file=sys.stderr, flush=True)
     sys.exit(1)
 
+total_after = User.objects.count()
+print(f"Total users after: {total_after}", file=sys.stderr, flush=True)
 print(f"SUCCESS: Demo user verified - Username: {final_check.username}, ID: {final_check.id}", file=sys.stderr, flush=True)
-PYTHON_EOF
+PYTHON_SCRIPT
+
+python -u /tmp/ensure_demo_user.py
 
 EXIT_CODE=$?
-echo "Verification script exit code: $EXIT_CODE"
 if [ $EXIT_CODE -ne 0 ]; then
-    echo "ERROR: User verification failed with exit code $EXIT_CODE!"
+    echo "FATAL: User verification failed with exit code $EXIT_CODE!"
     exit 1
 fi
-echo "=== USER VERIFICATION COMPLETED ==="
 
 # Start server with gunicorn (production-ready)
-echo "Starting Gunicorn server..."
 exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120 --access-logfile - --error-logfile -
 
