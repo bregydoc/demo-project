@@ -11,6 +11,8 @@ npm install
 # Configure environment
 cp .env.example .env
 # Edit .env to point to your backend API
+# In Production (Railway), this MUST start with https:// for cookies to work
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
 # Run development server
 npm run dev

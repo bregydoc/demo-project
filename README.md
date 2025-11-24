@@ -44,18 +44,18 @@ aesthetic-notes-app/
 
 ### 🎯 Demo Credentials
 
-**IMPORTANT:** The app starts with NO users. You must **Sign Up** (register) first!
+The app **automatically creates** a demo user on startup!
+
+- **Username:** `demo`
+- **Password:** `demo`
+
+You can use these credentials to log in immediately.
 
 **To get started:**
 1. Visit http://localhost:3000
-2. Click **"Sign up"** (not Sign In!)
-3. Create an account with any credentials, for example:
-   - Username: `demo`
-   - Password: `demo1234`
-   - Email: (optional, can leave blank)
-4. You'll be automatically logged in and can start creating notes!
-
-**After you've registered**, you can log back in with those same credentials.
+2. Click **"Sign In"** (or use the pre-filled demo credentials if available)
+3. Enter `demo` / `demo`
+4. Start creating notes!
 
 ### Prerequisites
 
@@ -115,23 +115,37 @@ Then start creating beautiful aesthetic notes! ✨
 make up
 ```
 
-2. **Run migrations and seed data:**
-
-```bash
-make migrate
-make seed
-```
-
-3. **Access the app:**
+2. **Access the app:**
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8000/api`
 - Django Admin: `http://localhost:8000/admin`
 
-4. **Register and start using:**
+*Note: Migrations and seeding happen automatically on container startup via `runner.py`.*
 
-Go to `http://localhost:3000`, click "Sign up", and create your account. Example:
-- Username: `demo`
-- Password: `demo1234`
+3. **Login:**
+Use the auto-created credentials: `demo` / `demo`
+
+### 🚀 Deployment (Railway)
+
+This project is optimized for Railway deployment.
+
+1. **Frontend Service:**
+   - **Build Command:** `npm run build`
+   - **Start Command:** `npm start`
+   - **Variables:**
+     - `NEXT_PUBLIC_API_URL`: `https://<your-backend>.up.railway.app` (No trailing slash, or root path if proxying)
+
+2. **Backend Service:**
+   - **Build Command:** (Leave empty if using Dockerfile)
+   - **Start Command:** `python runner.py` (Handles migrations, seeding, and Gunicorn)
+   - **Variables:**
+     - `DJANGO_SECRET_KEY`: (Random string)
+     - `DJANGO_DEBUG`: `False`
+     - `DATABASE_PATH`: `/app/data/db.sqlite3` (Persists data to volume)
+     - `CORS_ALLOWED_ORIGINS`: `https://<your-frontend>.up.railway.app`
+     - `CSRF_TRUSTED_ORIGINS`: `https://<your-frontend>.up.railway.app` (Optional, auto-detected)
+
+**Important:** Attach a **Volume** to the backend service at `/app/data` to persist the SQLite database.
 
 ## Available Commands
 
