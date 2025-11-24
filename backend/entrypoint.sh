@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Force unbuffered output
+export PYTHONUNBUFFERED=1
+
 # Set database path for Railway volume
 export DATABASE_PATH=/app/data/db.sqlite3
 
@@ -8,39 +11,36 @@ export DATABASE_PATH=/app/data/db.sqlite3
 mkdir -p /app/data
 
 # Verify Django is installed
+echo "=== VERIFYING DJANGO ===" >&2
 python -c "import django; print('✓ Django', django.__version__, 'is available')" || {
-    echo "✗ ERROR: Django is not available!"
+    echo "✗ ERROR: Django is not available!" >&2
     exit 1
 }
 
 # Run migrations
-echo "Running migrations..."
+echo "=== RUNNING MIGRATIONS ===" >&2
 python manage.py migrate
 
 # Seed categories and demo user (always runs, idempotent)
-echo "============================================================"
-echo "SEEDING CATEGORIES AND DEMO USER"
-echo "============================================================"
+echo "=== SEEDING CATEGORIES AND DEMO USER ===" >&2
 python -u manage.py seed_categories 2>&1 || {
-    echo "ERROR: Seed command failed!"
+    echo "ERROR: Seed command failed with exit code $?" >&2
     exit 1
 }
-echo "============================================================"
+echo "=== SEED COMMAND COMPLETED ===" >&2
 
 # Verify and ensure demo user exists with detailed logging
-echo "============================================================"
-echo "VERIFYING DEMO USER"
-echo "============================================================"
-python -u manage.py shell 2>&1 << 'PYTHON_EOF'
+echo "=== VERIFYING DEMO USER ===" >&2
+python -u manage.py shell << 'PYTHON_EOF'
 import sys
 import os
 os.environ['PYTHONUNBUFFERED'] = '1'
 
 from django.contrib.auth.models import User
 
-print("=" * 60)
-print("USER VERIFICATION")
-print("=" * 60)
+print("=" * 60, flush=True)
+print("USER VERIFICATION", flush=True)
+print("=" * 60, flush=True)
 
 # Check total users
 total_users = User.objects.count()
@@ -52,68 +52,57 @@ if total_users > 0:
     for u in User.objects.all():
         print(f"  - Username: {u.username}, ID: {u.id}, Active: {u.is_active}, Email: {u.email}", flush=True)
 
-# Check demo user
+# ALWAYS ensure demo user exists - delete and recreate if needed
+print("\nEnsuring demo user exists...", flush=True)
 demo_user = User.objects.filter(username='demo').first()
+
 if demo_user:
-    print(f"\n✓ Demo user exists: {demo_user.username}", flush=True)
-    print(f"  ID: {demo_user.id}", flush=True)
-    print(f"  Active: {demo_user.is_active}", flush=True)
-    print(f"  Email: {demo_user.email}", flush=True)
-    
-    # Test password
-    password_check = demo_user.check_password('demo')
-    print(f"  Password check ('demo'): {password_check}", flush=True)
-    
-    if not password_check:
-        print("  ✗ Password check failed - resetting password", flush=True)
-        demo_user.set_password('demo')
-        demo_user.save()
-        print("  ✓ Password reset complete", flush=True)
-        if demo_user.check_password('demo'):
-            print("  ✓ Password verification after reset: SUCCESS", flush=True)
-        else:
-            print("  ✗ ERROR: Password still incorrect after reset!", flush=True)
-            sys.exit(1)
-    else:
-        print("  ✓ Password is correct", flush=True)
+    print(f"Demo user found: {demo_user.username} (ID: {demo_user.id})", flush=True)
+    # Always reset password to ensure it's correct
+    demo_user.set_password('demo')
+    demo_user.is_active = True
+    demo_user.save()
+    print("Password reset to 'demo'", flush=True)
 else:
-    print("\n✗ Demo user does not exist! Creating now...", flush=True)
+    print("Demo user does not exist - creating now...", flush=True)
     try:
         demo_user = User.objects.create_user('demo', 'demo@example.com', 'demo')
+        demo_user.is_active = True
         demo_user.save()
-        print(f"✓ Created demo user: {demo_user.username}", flush=True)
-        print(f"  ID: {demo_user.id}", flush=True)
-        print(f"  Active: {demo_user.is_active}", flush=True)
-        if demo_user.check_password('demo'):
-            print("  ✓ Password verification: SUCCESS", flush=True)
-        else:
-            print("  ✗ ERROR: Password verification failed after creation!", flush=True)
-            sys.exit(1)
+        print(f"Created demo user: {demo_user.username} (ID: {demo_user.id})", flush=True)
     except Exception as e:
-        print(f"✗ ERROR creating demo user: {e}", flush=True)
+        print(f"ERROR creating demo user: {e}", flush=True)
         import traceback
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stdout)
+        sys.stdout.flush()
         sys.exit(1)
 
-# Final verification
+# Verify user exists and password works
 final_check = User.objects.filter(username='demo').first()
-if final_check and final_check.check_password('demo'):
-    print("\n✓ FINAL VERIFICATION: Demo user exists and password is correct", flush=True)
-else:
-    print("\n✗ FINAL VERIFICATION FAILED!", flush=True)
+if not final_check:
+    print("ERROR: Demo user still does not exist after creation!", flush=True)
     sys.exit(1)
 
-print("=" * 60)
-print("VERIFICATION COMPLETE")
-print("=" * 60)
+if not final_check.check_password('demo'):
+    print("ERROR: Password verification failed!", flush=True)
+    sys.exit(1)
+
+print(f"\n✓ SUCCESS: Demo user verified", flush=True)
+print(f"  Username: {final_check.username}", flush=True)
+print(f"  ID: {final_check.id}", flush=True)
+print(f"  Active: {final_check.is_active}", flush=True)
+print(f"  Password check: PASSED", flush=True)
+print("=" * 60, flush=True)
+print("VERIFICATION COMPLETE", flush=True)
+print("=" * 60, flush=True)
 PYTHON_EOF
 
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
-    echo "ERROR: User verification failed with exit code $EXIT_CODE!"
+    echo "ERROR: User verification failed with exit code $EXIT_CODE!" >&2
     exit 1
 fi
-echo "============================================================"
+echo "=== USER VERIFICATION COMPLETED ===" >&2
 
 # Start server with gunicorn (production-ready)
 echo "Starting Gunicorn server..."
